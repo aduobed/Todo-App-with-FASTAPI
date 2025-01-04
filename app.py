@@ -46,3 +46,32 @@ async def create_todo(todo: TodoMod, db: Session = Depends(get_db)):
     db.add(db_todo)
     db.commit()
     return {"message": "Todo created successfully"}
+
+
+@app.put("/todo/{todo_id}")
+async def update_todo(todo_id: int, todo: TodoMod, db: Session = Depends(get_db)):
+    db_todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+
+    if db_todo is not None:
+        db_todo.title = todo.title
+        db_todo.description = todo.description
+        db_todo.priority = todo.priority
+        db_todo.complete = todo.complete
+
+        db.add(db_todo)
+        db.commit()
+        return {"message": "Todo updated successfully"}
+    else:
+        raise NoTodoFoundException(todo_id=todo_id)
+
+
+@app.delete("/todo/{todo_id}")
+async def delete_todo(todo_id: int, db: Session = Depends(get_db)):
+    db_todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+
+    if db_todo is None:
+        raise NoTodoFoundException(todo_id=todo_id)
+
+    db.delete(db_todo)
+    db.commit()
+    return {"message": "Todo deleted successfully"}
