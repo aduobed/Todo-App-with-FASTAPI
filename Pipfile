@@ -7,10 +7,9 @@ name = "pypi"
 fastapi = "*"
 uvicorn = "*"
 sqlalchemy = "*"
-bcrypt = "*"
-passlib = "*"
+passlib = {extras = ["bcrpt"], version = "*"}
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
+python_version = "3.9"
