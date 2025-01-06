@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, status
 from database import models
 from database import db_start
 from sqlalchemy.orm import Session
@@ -13,18 +13,18 @@ app.add_exception_handler(NoTodoFoundException,
                           no_todo_found_exception_handler)
 
 
-@app.get("/todo")
-async def get_todos(db: Session = Depends(db_start.get_db)):
-    return db.query(models.Todos).all()
+# @app.get("/todo")
+# async def get_todos(db: Session = Depends(db_start.get_db)):
+#     return db.query(models.Todos).all()
 
 
-@app.get("/todo/user")
+@app.get("/todo/")
 async def get_todo_by_user(user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
-    query_response = db.query(models.Todos).filter(
-        models.Todos.owner_id == user.get('user_id')).all()
-
     if user is None:
         raise user_exception()
+
+    query_response = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get('user_id')).all()
 
     if len(query_response) == 0:
         return {"message": "No todos found for this user"}
@@ -46,19 +46,28 @@ async def get_todo_by_id(todo_id: int,user: dict = Depends(get_current_user), db
         raise NoTodoFoundException(todo_id=todo_id)
 
 
-@app.post("/todo")
-async def create_todo(todo: TodoMod, db: Session = Depends(db_start.get_db)):
+@app.post("/todo/")
+async def create_todo(todo: TodoMod, user: dict = Depends(get_current_user) ,db: Session = Depends(db_start.get_db)):
+
+    if user is None:
+        raise user_exception()
+
     db_todo = models.Todos(title=todo.title, description=todo.description,
-                           priority=todo.priority, complete=todo.complete, owner_id=todo.owner_id)
+                           priority=todo.priority, complete=todo.complete, owner_id=user.get('user_id'))
 
     db.add(db_todo)
     db.commit()
-    return {"message": "Todo created successfully"}
+    return {"message": "Todo created successfully", "status_code": status.HTTP_201_CREATED}
 
 
 @app.put("/todo/{todo_id}")
-async def update_todo(todo_id: int, todo: TodoMod, db: Session = Depends(db_start.get_db)):
-    db_todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+async def update_todo(todo_id: int, todo: TodoMod, user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
+    if user is None:
+        raise user_exception()
+
+    db_todo = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get("user_id")).filter(
+            models.Todos.id == todo_id).first()
 
     if db_todo is not None:
         db_todo.title = todo.title
@@ -74,8 +83,13 @@ async def update_todo(todo_id: int, todo: TodoMod, db: Session = Depends(db_star
 
 
 @app.delete("/todo/{todo_id}")
-async def delete_todo(todo_id: int, db: Session = Depends(db_start.get_db)):
-    db_todo = db.query(models.Todos).filter(models.Todos.id == todo_id).first()
+async def delete_todo(todo_id: int,user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
+    if user is None:
+        raise user_exception()
+
+    db_todo = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get("user_id")).filter(
+            models.Todos.id == todo_id).first()
 
     if db_todo is None:
         raise NoTodoFoundException(todo_id=todo_id)
