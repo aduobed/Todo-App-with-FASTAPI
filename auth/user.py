@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from utils.password_hash import get_password_hash
 from auth.user_authenticate import authenticate_user
 from auth.user_jwt_token_generate import create_access_token
+from exceptions.user_token_exception import token_exception
 
 app = FastAPI()
 
@@ -25,7 +26,7 @@ async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
 async def get_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db_session: Session = Depends(db_start.get_db)):
     user = authenticate_user(form_data.username, form_data.password, db_session)
     if not user:
-        return HTTPException(status_code=400, detail="Incorrect username or password")
+        return token_exception()
 
     token_expire_time = time_delta(minutes=20)
     access_token = create_access_token(user.username, user.id, token_expire_time)
