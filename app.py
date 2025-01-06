@@ -4,6 +4,8 @@ from database import db_start
 from sqlalchemy.orm import Session
 from exceptions.exception_handler import NoTodoFoundException, no_todo_found_exception_handler
 from model.model import TodoModel as TodoMod
+from auth.user_jwt_token_generate import get_current_user
+from exceptions.user_token_exception import user_exception
 
 app = FastAPI()
 
@@ -16,9 +18,25 @@ async def get_todos(db: Session = Depends(db_start.get_db)):
     return db.query(models.Todos).all()
 
 
-@app.get("/todo/{todo_id}")
-async def get_todo_by_id(todo_id: int, db: Session = Depends(db_start.get_db)):
+@app.get("/todo/user")
+async def get_todo_by_user(user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
     query_response = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get('user_id')).all()
+
+    if user is None:
+        raise user_exception()
+
+    if len(query_response) == 0:
+        return {"message": "No todos found for this user"}
+
+    return query_response
+
+
+@app.get("/todo/{todo_id}")
+async def get_todo_by_id(todo_id: int,user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
+    query_response = db.query(models.Todos).filter(
+        models.Todos.owner_id == user.get('user_id')
+    ).filter(
         models.Todos.id == todo_id).first()
 
     if query_response is not None:
@@ -31,7 +49,7 @@ async def get_todo_by_id(todo_id: int, db: Session = Depends(db_start.get_db)):
 @app.post("/todo")
 async def create_todo(todo: TodoMod, db: Session = Depends(db_start.get_db)):
     db_todo = models.Todos(title=todo.title, description=todo.description,
-                           priority=todo.priority, complete=todo.complete)
+                           priority=todo.priority, complete=todo.complete, owner_id=todo.owner_id)
 
     db.add(db_todo)
     db.commit()
