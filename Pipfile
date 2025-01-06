@@ -9,6 +9,7 @@ uvicorn = "*"
 sqlalchemy = "*"
 passlib = {extras = ["bcrpt"], version = "*"}
 python-multipart = "*"
+python-jose = {extras = ["cryptography"], version = "*"}
 
 [dev-packages]
 
