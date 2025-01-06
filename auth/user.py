@@ -1,11 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from database import models
+from datetime import timedelta as time_delta
 from database import db_start
 from model.model import UserModel as UserMod
 from sqlalchemy.orm import Session
 from utils.password_hash import get_password_hash
 from auth.user_authenticate import authenticate_user
+from auth.user_jwt_token_generate import create_access_token
 
 app = FastAPI()
 
@@ -19,9 +21,12 @@ async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
     db.commit()
     return {"message": "User created successfully"}
 
-@app.post("/todo/login")
+@app.post("/todo/user/login")
 async def get_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db_session: Session = Depends(db_start.get_db)):
     user = authenticate_user(form_data.username, form_data.password, db_session)
     if not user:
         return HTTPException(status_code=400, detail="Incorrect username or password")
-    return {"message": "Login successful"}
+
+    token_expire_time = time_delta(minutes=20)
+    access_token = create_access_token(user.username, user.id, token_expire_time)
+    return {"access_token": access_token, "token_type": "bearer"}
