@@ -11,3 +11,6 @@ In the _.venv\Lib\site-packages\passlib\handlers\bcrypt.py_ file change the belo
 version = \_bcrypt.**about**.**version**
 -->
 version = \_bcrypt.**version**
+
+## Generate requirements.txt from pipenv
+> pipenv requirements > requirements.txt
