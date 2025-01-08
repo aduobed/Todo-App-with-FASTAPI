@@ -13,9 +13,13 @@ from auth.user_authenticate import authenticate_user
 from auth.user_jwt_token_generate import create_access_token
 from exceptions.user_token_exception import token_exception
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/auth",
+    tags=["auth"],
+    responses={401: {"user": "Not Authorized"}},
+)
 
-@router.post("/todo/user")
+@router.post("/user")
 async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
     hash_password = get_password_hash(user.password)
     user_todo = models.Users(username=user.username, email=user.email,
@@ -25,7 +29,7 @@ async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
     db.commit()
     return {"message": "User created successfully"}
 
-@router.post("/todo/user/login")
+@router.post(" /user/login")
 async def get_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db_session: Session = Depends(db_start.get_db)):
     user = authenticate_user(form_data.username, form_data.password, db_session)
     if not user:

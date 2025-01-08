@@ -10,9 +10,13 @@ from model.model import TodoModel as TodoMod
 from auth.user_jwt_token_generate import get_current_user
 from exceptions.user_token_exception import user_exception
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/todos",
+    tags=["todos"],
+    responses={404: {"description": "Not Found"}},
+)
 
-@router.get("/todo/")
+@router.get("/")
 async def get_todo_by_user(user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
     if user is None:
         raise user_exception()
@@ -26,7 +30,7 @@ async def get_todo_by_user(user: dict = Depends(get_current_user), db: Session =
     return query_response
 
 
-@router.get("/todo/{todo_id}")
+@router.get("/{todo_id}")
 async def get_todo_by_id(todo_id: int,user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
     query_response = db.query(models.Todos).filter(
         models.Todos.owner_id == user.get('user_id')
@@ -40,7 +44,7 @@ async def get_todo_by_id(todo_id: int,user: dict = Depends(get_current_user), db
         raise NoTodoFoundException(todo_id=todo_id)
 
 
-@router.post("/todo/")
+@router.post("/")
 async def create_todo(todo: TodoMod, user: dict = Depends(get_current_user) ,db: Session = Depends(db_start.get_db)):
 
     if user is None:
@@ -54,7 +58,7 @@ async def create_todo(todo: TodoMod, user: dict = Depends(get_current_user) ,db:
     return {"message": "Todo created successfully", "status_code": status.HTTP_201_CREATED}
 
 
-@router.put("/todo/{todo_id}")
+@router.put("/{todo_id}")
 async def update_todo(todo_id: int, todo: TodoMod, user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
     if user is None:
         raise user_exception()
@@ -76,7 +80,7 @@ async def update_todo(todo_id: int, todo: TodoMod, user: dict = Depends(get_curr
         raise NoTodoFoundException(todo_id=todo_id)
 
 
-@router.delete("/todo/{todo_id}")
+@router.delete("/{todo_id}")
 async def delete_todo(todo_id: int,user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
     if user is None:
         raise user_exception()
