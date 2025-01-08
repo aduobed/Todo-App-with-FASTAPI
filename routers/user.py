@@ -1,4 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+import sys
+sys.path.append("..")
+
+from fastapi import Depends, HTTPException, APIRouter
 from fastapi.security import OAuth2PasswordRequestForm
 from database import models
 from datetime import timedelta as time_delta
@@ -10,9 +13,9 @@ from auth.user_authenticate import authenticate_user
 from auth.user_jwt_token_generate import create_access_token
 from exceptions.user_token_exception import token_exception
 
-app = FastAPI()
+router = APIRouter()
 
-@app.post("/todo/user")
+@router.post("/todo/user")
 async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
     hash_password = get_password_hash(user.password)
     user_todo = models.Users(username=user.username, email=user.email,
@@ -22,7 +25,7 @@ async def create_user(user: UserMod, db: Session = Depends(db_start.get_db)):
     db.commit()
     return {"message": "User created successfully"}
 
-@app.post("/todo/user/login")
+@router.post("/todo/user/login")
 async def get_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db_session: Session = Depends(db_start.get_db)):
     user = authenticate_user(form_data.username, form_data.password, db_session)
     if not user:
