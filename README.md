@@ -19,4 +19,8 @@ version = \_bcrypt.**version**
 Alembic is a powerful tool that allows us to modify database schemas.
 1. Alembic provides the creation and invocation of change management scripts.
 1. This allows you to create migration environments and also change data how you like.
-1. It allows you to modify your database in real-time 
+1. It allows you to modify your database in real-time
+
+### Alembic Use
+1. `alembic revision -m "create user phone number col"` - This creates a new file to modify database
+1.  `alembic upgrade f7d4d368c50d` - This runs the migration specific file using the revision number
