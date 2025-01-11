@@ -14,5 +14,15 @@ class UserModel(BaseModel):
     username: str
     email: Optional[str]
     first_name: str
-    last_name: str 
+    last_name: str
     password: str
+    phone_number: Optional[str]
+
+
+class AddressModel(BaseModel):
+    address1: str
+    address2: Optional[str]
+    country: str
+    city: str
+    state: str
+    zip: str
