@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from database import models
 from database import db_start
 from sqlalchemy.orm import Session
@@ -10,11 +10,20 @@ from model.model import TodoModel as TodoMod
 from auth.user_jwt_token_generate import get_current_user
 from exceptions.user_token_exception import user_exception
 
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+templates = Jinja2Templates(directory="templates")
+
 router = APIRouter(
     prefix="/todos",
     tags=["todos"],
     responses={404: {"description": "Not Found"}},
 )
+
+@router.get("/test")
+async def test(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request})
 
 @router.get("/")
 async def get_todo_by_user(user: dict = Depends(get_current_user), db: Session = Depends(db_start.get_db)):
